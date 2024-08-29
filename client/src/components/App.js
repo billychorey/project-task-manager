@@ -1,8 +1,28 @@
-import React, { useEffect, useState } from "react";
-import { Switch, Route } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import Dashboard from "./Dashboard";
+import ProjectDetails from "./ProjectDetails";
+import TaskManagement from "./TaskManagement";
 
 function App() {
-  return <h1>Project Client</h1>;
+  // State and effect hooks can be added here in the future
+  // const [data, setData] = useState([]);
+
+  // useEffect(() => {
+  //   // Future data fetching can be done here
+  // }, []);
+
+  return (
+    <Router>
+      <div className="App">
+        <Switch>
+          <Route path="/" exact component={Dashboard} />
+          <Route path="/projects/:id" component={ProjectDetails} />
+          <Route path="/tasks" component={TaskManagement} />
+        </Switch>
+      </div>
+    </Router>
+  );
 }
 
 export default App;
