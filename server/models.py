@@ -1,6 +1,5 @@
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.associationproxy import association_proxy
-
 from config import db
 
 # Association Table for Many-to-Many relationship between Users and Projects
@@ -15,8 +14,10 @@ class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
+    username = db.Column(db.String, unique=True, nullable=False)
+    password = db.Column(db.String, nullable=False)  # This should be hashed in a real app
     email = db.Column(db.String, unique=True, nullable=False)
+    name = db.Column(db.String, nullable=False)
 
     # Define relationship with Project using backref
     projects = db.relationship('Project', secondary=user_project_association, backref='users')
@@ -24,7 +25,7 @@ class User(db.Model, SerializerMixin):
     # One-to-Many relationship with Task
     tasks = db.relationship('Task', backref='user')
 
-    serialize_rules = ('-projects.tasks',)  # Exclude certain nested relationships from serialization
+    serialize_rules = ('-projects.tasks', '-password', '-projects.users')  # Exclude sensitive or nested relationships from serialization
 
 # Project Model
 class Project(db.Model, SerializerMixin):
@@ -36,6 +37,9 @@ class Project(db.Model, SerializerMixin):
 
     # One-to-Many relationship with Task
     tasks = db.relationship('Task', backref='project')
+
+    # Association proxy to access users directly from a project
+    user_ids = association_proxy('users', 'id')
 
     serialize_rules = ('-tasks', '-users')
 
@@ -51,3 +55,4 @@ class Task(db.Model, SerializerMixin):
 
     # Relationships are handled by backref in User and Project models
     serialize_rules = ('-project.tasks', '-user.tasks')
+

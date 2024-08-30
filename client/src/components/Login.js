@@ -1,0 +1,12 @@
+import React from 'react';
+import { useFormik } from 'formik';
+
+const Login = () => {
+  return (
+    <div>
+      <h2>Login Page</h2>
+    </div>
+  );
+};
+
+export default Login;

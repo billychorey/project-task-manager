@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import SimpleForm from './SimpleForm';
 import EditProjectForm from './EditProjectForm';
 
@@ -21,6 +22,7 @@ function Dashboard() {
         setLoading(false);
       })
       .catch((error) => {
+        console.error('Error fetching projects:', error);
         setError(error.message);
         setLoading(false);
       });
@@ -34,14 +36,23 @@ function Dashboard() {
       },
       body: JSON.stringify(newProject),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to create project');
+        }
+        return response.json();
+      })
       .then((createdProject) => {
         setProjects([...projects, createdProject]);
       })
-      .catch((error) => setError(error.message));
+      .catch((error) => {
+        console.error('Error creating project:', error);
+        setError(error.message);
+      });
   };
 
   const handleUpdateProject = (updatedProject) => {
+    console.log('Updating Project:', updatedProject);
     fetch(`http://127.0.0.1:5000/projects/${updatedProject.id}`, {
       method: 'PUT',
       headers: {
@@ -49,8 +60,14 @@ function Dashboard() {
       },
       body: JSON.stringify(updatedProject),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to update project');
+        }
+        return response.json();
+      })
       .then((data) => {
+        console.log('Updated Project Response:', data);
         setProjects(
           projects.map((project) =>
             project.id === updatedProject.id ? updatedProject : project
@@ -58,20 +75,30 @@ function Dashboard() {
         );
         setEditingProject(null);
       })
-      .catch((error) => setError(error.message));
+      .catch((error) => {
+        console.error('Error updating project:', error);
+        setError(error.message);
+      });
   };
 
   const handleDeleteProject = (projectId) => {
     fetch(`http://127.0.0.1:5000/projects/${projectId}`, {
       method: 'DELETE',
     })
-      .then(() => {
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to delete project');
+        }
         setProjects(projects.filter((project) => project.id !== projectId));
       })
-      .catch((error) => setError(error.message));
+      .catch((error) => {
+        console.error('Error deleting project:', error);
+        setError(error.message);
+      });
   };
 
   const startEditingProject = (project) => {
+    console.log('Editing Project:', project);
     setEditingProject(project);
   };
 
@@ -97,7 +124,7 @@ function Dashboard() {
       <ul>
         {projects.map((project) => (
           <li key={project.id}>
-            {project.title}
+            <Link to={`/projects/${project.id}`}>{project.title}</Link>
             <button onClick={() => startEditingProject(project)}>Edit</button>
             <button onClick={() => handleDeleteProject(project.id)}>Delete</button>
           </li>
