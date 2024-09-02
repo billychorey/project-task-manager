@@ -7,26 +7,32 @@ function Dashboard() {
     const [editingProject, setEditingProject] = useState(null);
 
     useEffect(() => {
-        fetch('http://127.0.0.1:5000/projects')
-            .then((res) => {
-                if (!res.ok) {
-                    throw new Error('Failed to fetch projects');
-                }
-                return res.json();
-            })
-            .then((data) => {
-                if (Array.isArray(data)) {
-                    setProjects(data);
-                } else {
-                    console.error('Unexpected response format:', data);
-                    setError('Failed to fetch projects');
-                }
-            })
-            .catch((err) => {
-                console.error('Error fetching projects:', err);
-                setError('Failed to fetch projects');
-            });
-    }, []);
+    fetch('http://127.0.0.1:5000/projects', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then((res) => {
+        if (!res.ok) {
+            throw new Error('Failed to fetch projects');
+        }
+        return res.json();
+    })
+    .then((data) => {
+        if (Array.isArray(data)) {
+            setProjects(data);
+        } else {
+            console.error('Unexpected response format:', data);
+            setError('Failed to fetch projects');
+        }
+    })
+    .catch((err) => {
+        console.error('Error fetching projects:', err);
+        setError('Failed to fetch projects');
+    });
+}, []);
+
 
     const handleCreateProject = (newProject) => {
         fetch('http://127.0.0.1:5000/projects', {

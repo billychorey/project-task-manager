@@ -1,13 +1,18 @@
-from flask import Flask
+from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 from flask_cors import CORS
 from flask_migrate import Migrate
-from config import db  # Import db from config
-from models import Employee, Project, Task  # Import models
+from config import db
+from models import Employee, Project, Task
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../instance/app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+@app.before_request
+def handle_options_request():
+    if request.method == "OPTIONS":
+        return '', 204
 
 # Initialize the database with the app
 db.init_app(app)
@@ -15,8 +20,8 @@ db.init_app(app)
 # Setup Flask-Migrate
 migrate = Migrate(app, db)
 
-# Setup CORS
-CORS(app)
+# Setup CORS with specific origin
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
 
 # Setup API
 api = Api(app)
