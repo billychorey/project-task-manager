@@ -1,58 +1,29 @@
+from config import db  # Import the initialized db
 from sqlalchemy_serializer import SerializerMixin
-from sqlalchemy.ext.associationproxy import association_proxy
-from config import db
 
-# Association Table for Many-to-Many relationship between Users and Projects
-user_project_association = db.Table('user_project_association',
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
-    db.Column('project_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True),
-    db.Column('role', db.String)  # Additional attribute for user-submittable data
-)
-
-# User Model
-class User(db.Model, SerializerMixin):
-    __tablename__ = 'users'
+class Employee(db.Model, SerializerMixin):
+    __tablename__ = 'employees'
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, unique=True, nullable=False)
-    password = db.Column(db.String, nullable=False)  # This should be hashed in a real app
-    email = db.Column(db.String, unique=True, nullable=False)
-    name = db.Column(db.String, nullable=False)
+    name = db.Column(db.String(80), nullable=False)
+    projects = db.relationship('Project', secondary='tasks', back_populates='employees', overlaps="tasks,projects")
+    tasks = db.relationship('Task', back_populates='employee', overlaps="projects")
 
-    # Define relationship with Project using backref
-    projects = db.relationship('Project', secondary=user_project_association, backref='users')
-    
-    # One-to-Many relationship with Task
-    tasks = db.relationship('Task', backref='user')
-
-    serialize_rules = ('-projects.tasks', '-password', '-projects.users')  # Exclude sensitive or nested relationships from serialization
-
-# Project Model
 class Project(db.Model, SerializerMixin):
     __tablename__ = 'projects'
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String, nullable=False)
-    description = db.Column(db.String)
+    title = db.Column(db.String(80), nullable=False)
+    description = db.Column(db.String(120))
+    employees = db.relationship('Employee', secondary='tasks', back_populates='projects', overlaps="tasks,employees")
+    tasks = db.relationship('Task', back_populates='project', overlaps="employees,projects")
 
-    # One-to-Many relationship with Task
-    tasks = db.relationship('Task', backref='project')
-
-    # Association proxy to access users directly from a project
-    user_ids = association_proxy('users', 'id')
-
-    serialize_rules = ('-tasks', '-users')
-
-# Task Model
 class Task(db.Model, SerializerMixin):
     __tablename__ = 'tasks'
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String, nullable=False)
-    status = db.Column(db.String, nullable=False)
+    description = db.Column(db.String(120))
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-
-    # Relationships are handled by backref in User and Project models
-    serialize_rules = ('-project.tasks', '-user.tasks')
-
+    employee = db.relationship('Employee', back_populates='tasks', overlaps="projects")
+    project = db.relationship('Project', back_populates='tasks', overlaps="employees,projects")

@@ -1,37 +1,57 @@
-import React, { useState, useEffect } from 'react';
+// EditProjectForm.js
+import React, { useState } from 'react';
 
-function EditProjectForm({ project, onSubmit }) {
-  const [title, setTitle] = useState(project.title);
-  const [description, setDescription] = useState(project.description);
+const EditProjectForm = ({ project, onUpdate }) => {
+    const [title, setTitle] = useState(project.title || '');
+    const [description, setDescription] = useState(project.description || '');
+    const [error, setError] = useState(null);
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    const updatedProject = { ...project, title, description };
-    onSubmit(updatedProject);
-  };
+    const handleSubmit = (e) => {
+        e.preventDefault();
 
-  return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label>Title</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <label>Description</label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-        />
-      </div>
-      <button type="submit">Update Project</button>
-    </form>
-  );
-}
+        fetch(`http://127.0.0.1:5000/projects/${project.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ title, description }),
+        })
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.error) {
+                setError(data.error);
+            } else {
+                onUpdate(data);
+                setError(null);
+            }
+        })
+        .catch((err) => {
+            console.error('Error updating project:', err);
+            setError('Failed to update project');
+        });
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <div>
+                <label>Title</label>
+                <input 
+                    type="text" 
+                    value={title} 
+                    onChange={(e) => setTitle(e.target.value)} 
+                />
+            </div>
+            <div>
+                <label>Description</label>
+                <textarea 
+                    value={description} 
+                    onChange={(e) => setDescription(e.target.value)}
+                />
+            </div>
+            {error && <div style={{ color: 'red' }}>{error}</div>}
+            <button type="submit">Update Project</button>
+        </form>
+    );
+};
 
 export default EditProjectForm;

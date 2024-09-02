@@ -37,6 +37,7 @@ const NewProjectForm = ({ onSubmit }) => {
           })
           .catch((error) => {
             setServerError(error.message);
+            console.error('Error creating project:', error);
           })
           .finally(() => {
             setSubmitting(false);

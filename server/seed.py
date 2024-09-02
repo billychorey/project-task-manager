@@ -1,55 +1,25 @@
-#!/usr/bin/env python3
+from models import db, Employee, Project, Task
+from config import app
 
-# Standard library imports
-from random import randint, choice as rc
+# Drop all existing tables and create new ones
+with app.app_context():
+    db.drop_all()
+    db.create_all()
 
-# Remote library imports
-from faker import Faker
+    # Create some employees
+    emp1 = Employee(name="John Doe", position="Manager")
+    emp2 = Employee(name="Jane Smith", position="Developer")
 
-# Local imports
-from app import app
-from models import db, User, Project, Task  # Ensure these models are imported
+    # Create some projects
+    proj1 = Project(title="Project Alpha", description="Alpha project description")
+    proj2 = Project(title="Project Beta", description="Beta project description")
 
-if __name__ == '__main__':
-    fake = Faker()
-    with app.app_context():
-        print("Starting seed...")
+    # Create some tasks
+    task1 = Task(task_name="Task 1 for Alpha", employee=emp1, project=proj1)
+    task2 = Task(task_name="Task 2 for Beta", employee=emp2, project=proj2)
 
-        # Clear existing data
-        Task.query.delete()
-        Project.query.delete()
-        User.query.delete()
+    # Add all records to the session and commit them to the database
+    db.session.add_all([emp1, emp2, proj1, proj2, task1, task2])
+    db.session.commit()
 
-        # Create users
-        users = []
-        for _ in range(5):  # Create 5 users
-            user = User(
-                name=fake.name(),
-                email=fake.email()
-            )
-            db.session.add(user)
-            users.append(user)
-
-        # Create projects
-        projects = []
-        for _ in range(5):  # Create 5 projects
-            project = Project(
-                title=fake.catch_phrase(),
-                description=fake.text()
-            )
-            db.session.add(project)
-            projects.append(project)
-
-        # Create tasks
-        for _ in range(10):  # Create 10 tasks
-            task = Task(
-                title=fake.bs(),
-                status=rc(['To Do', 'In Progress', 'Completed']),
-                project_id=rc(projects).id,
-                user_id=rc(users).id
-            )
-            db.session.add(task)
-
-        # Commit the changes to the database
-        db.session.commit()
-        print("Seeding complete!")
+print("Database seeded successfully!")

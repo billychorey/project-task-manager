@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-function SimpleForm({ onSubmit }) {
+function SimpleForm({ onSubmit, project }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
 
+  // Update form fields when the project prop changes
+  useEffect(() => {
+    if (project) {
+      setTitle(project.title || '');
+      setDescription(project.description || '');
+    }
+  }, [project]);
+
   const handleSubmit = (event) => {
     event.preventDefault();
-    const newProject = { title, description };
-    onSubmit(newProject);
+    const updatedProject = { ...project, title, description };
+    onSubmit(updatedProject);
   };
 
   return (
@@ -29,7 +37,7 @@ function SimpleForm({ onSubmit }) {
           required
         />
       </div>
-      <button type="submit">Create Project</button>
+      <button type="submit">{project?.id ? 'Update Project' : 'Create Project'}</button>
     </form>
   );
 }
