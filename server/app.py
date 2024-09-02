@@ -2,11 +2,11 @@ from flask import Flask
 from flask_restful import Api, Resource, reqparse
 from flask_cors import CORS
 from flask_migrate import Migrate
-from config import db  # Import db from config.py
-from models import Employee, Project, Task  # You can keep these imports if you plan to use them
+from config import db  # Import db from config
+from models import Employee, Project, Task  # Import models
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../instance/app.db'  # Ensure this path is correct based on your folder structure
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../instance/app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize the database with the app
