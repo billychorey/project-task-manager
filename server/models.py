@@ -1,13 +1,32 @@
-from sqlalchemy import Table, Column, Integer, ForeignKey
-from sqlalchemy.orm import relationship
-from sqlalchemy_serializer import SerializerMixin
 from config import db
+from sqlalchemy_serializer import SerializerMixin
 
-# Association table for many-to-many relationship between Employees and Projects
-employee_project = Table('employee_project', db.Model.metadata,
-    Column('employee_id', Integer, ForeignKey('employees.id'), primary_key=True),
-    Column('project_id', Integer, ForeignKey('projects.id'), primary_key=True)
-)
+class Assignment(db.Model, SerializerMixin):
+    __tablename__ = 'assignments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    role = db.Column(db.String)
+    start_date = db.Column(db.DateTime)
+    end_date = db.Column(db.DateTime)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'))
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+
+    employee = db.relationship('Employee', back_populates='assignments', overlaps="projects,employee")
+    project = db.relationship('Project', back_populates='assignments', overlaps="employees,project")
+
+    serialize_rules = ('-employee.assignments', '-project.assignments')
+
+class Employee(db.Model, SerializerMixin):
+    __tablename__ = 'employees'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    assignments = db.relationship('Assignment', back_populates='employee', cascade='all, delete-orphan', overlaps="projects,employee")
+    tasks = db.relationship('Task', back_populates='employee_assigned')
+
+    projects = db.relationship('Project', secondary='assignments', back_populates='employees', overlaps="assignments,project")
+
+    serialize_rules = ('-assignments.employee', '-tasks.employee_assigned', '-projects.employees')
 
 class Project(db.Model, SerializerMixin):
     __tablename__ = 'projects'
@@ -15,29 +34,22 @@ class Project(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=True)
-    tasks = db.relationship('Task', backref='project', cascade='all, delete-orphan')
-    employees = db.relationship('Employee', secondary=employee_project, back_populates='projects')
+    assignments = db.relationship('Assignment', back_populates='project', cascade='all, delete-orphan', overlaps="employees,project")
+    tasks = db.relationship('Task', back_populates='project')
 
-    serialize_rules = ('-tasks.project', '-employees.projects')
+    employees = db.relationship('Employee', secondary='assignments', back_populates='projects', overlaps="assignments,employee")
+
+    serialize_rules = ('-assignments.project', '-tasks.project', '-employees.projects')
 
 class Task(db.Model, SerializerMixin):
     __tablename__ = 'tasks'
 
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String, nullable=False)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
-    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'))
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)
 
-    # Use a unique backref name to avoid conflicts
-    employee = db.relationship('Employee', backref='tasks')
+    project = db.relationship('Project', back_populates='tasks')
+    employee_assigned = db.relationship('Employee', back_populates='tasks')
 
-    serialize_rules = ('-project.tasks', '-employee.tasks')
-
-class Employee(db.Model, SerializerMixin):
-    __tablename__ = 'employees'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-    projects = db.relationship('Project', secondary=employee_project, back_populates='employees')
-
-    serialize_rules = ('-tasks.employee', '-projects.employees')
+    serialize_rules = ('-project.tasks', '-employee_assigned.tasks', '-project.employees')

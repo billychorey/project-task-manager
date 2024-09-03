@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import './Dashboard.css';
 
 const Dashboard = () => {
     const [projects, setProjects] = useState([]);
@@ -25,33 +24,31 @@ const Dashboard = () => {
     }, []);
 
     const handleAddProject = () => {
-    // Check if the project title and description are not empty
-    if (!newProjectTitle.trim() || !newProjectDescription.trim()) {
-        alert("Please provide both a project title and description.");
-        return;
-    }
+        if (!newProjectTitle || !newProjectDescription) {
+            alert("Project title and description cannot be empty.");
+            return;
+        }
 
-    const newProject = {
-        title: newProjectTitle,
-        description: newProjectDescription,
-    };
+        const newProject = {
+            title: newProjectTitle,
+            description: newProjectDescription,
+        };
 
-    fetch('http://127.0.0.1:5000/projects', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newProject)
-    })
-        .then(res => res.json())
-        .then(project => {
-            setProjects([...projects, project]);
-            setNewProjectTitle('');
-            setNewProjectDescription('');
+        fetch('http://127.0.0.1:5000/projects', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newProject)
         })
-        .catch(error => console.error('Error adding project:', error));
-};
-
+            .then(res => res.json())
+            .then(project => {
+                setProjects([...projects, project]);
+                setNewProjectTitle('');
+                setNewProjectDescription('');
+            })
+            .catch(error => console.error('Error adding project:', error));
+    };
 
     const handleEditProject = (projectId) => {
         const updatedProject = {
@@ -99,42 +96,40 @@ const Dashboard = () => {
     };
 
     const handleAssignEmployee = (projectId) => {
-    // Check if the task description is not empty and an employee is selected
-    if (!taskDescriptions[projectId]?.trim() || !selectedEmployees[projectId]) {
-        alert("Please provide a task description and select an employee.");
-        return;
-    }
+        if (!selectedEmployees[projectId] || !taskDescriptions[projectId]) {
+            alert("You must select an employee and provide a task description.");
+            return;
+        }
 
-    const assignment = {
-        employee_id: selectedEmployees[projectId],
-        description: taskDescriptions[projectId],
-    };
+        const assignment = {
+            employee_id: selectedEmployees[projectId],
+            description: taskDescriptions[projectId],
+        };
 
-    fetch(`http://127.0.0.1:5000/projects/${projectId}/assign_employee`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(assignment)
-    })
-        .then(res => res.json())
-        .then(() => {
-            setTaskDescriptions({
-                ...taskDescriptions,
-                [projectId]: ''
-            });
-            setSelectedEmployees({
-                ...selectedEmployees,
-                [projectId]: null,
-            });
-            fetch('http://127.0.0.1:5000/projects')
-                .then(res => res.json())
-                .then(data => setProjects(data))
-                .catch(error => console.error('Error re-fetching projects:', error));
+        fetch(`http://127.0.0.1:5000/projects/${projectId}/assign_employee`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(assignment)
         })
-        .catch(error => console.error('Error assigning employee:', error));
-};
-
+            .then(res => res.json())
+            .then(() => {
+                setTaskDescriptions({
+                    ...taskDescriptions,
+                    [projectId]: ''
+                });
+                setSelectedEmployees({
+                    ...selectedEmployees,
+                    [projectId]: null,
+                });
+                fetch('http://127.0.0.1:5000/projects')
+                    .then(res => res.json())
+                    .then(data => setProjects(data))
+                    .catch(error => console.error('Error re-fetching projects:', error));
+            })
+            .catch(error => console.error('Error assigning employee:', error));
+    };
 
     const handleRemoveEmployee = (taskId) => {
         fetch(`http://127.0.0.1:5000/tasks/${taskId}`, {
@@ -210,21 +205,25 @@ const Dashboard = () => {
                             <option value="">Select Employee</option>
                             {employees.map(employee => (
                                 <option key={employee.id} value={employee.id}>
-                                    {employee.name}
+                                    {employee?.name ? employee.name : "Unnamed"}
                                 </option>
                             ))}
                         </select>
                         <button onClick={() => handleAssignEmployee(project.id)}>Assign Employee</button>
                         <button onClick={() => toggleEditMode(project.id, project.title, project.description)}>Edit</button>
-                        <button onClick={() => handleDeleteProject(project.id)}>Delete</button>
+                        <div>
+                            <button onClick={() => handleDeleteProject(project.id)}>Delete Project</button>
+                        </div>
                         <ul>
-                            {project.tasks.map(task => (
+                            {Array.isArray(project.tasks) && project.tasks.length > 0 ? project.tasks.map(task => (
                                 <li key={task.id}>
-                                    {task.description} - {task.employee.name}
+                                    {task.description} - {task.assigned_employee?.name || "Unnamed"}
                                     <button onClick={() => handleRemoveEmployee(task.id)}>Remove</button>
                                 </li>
-                            ))}
+                            )) : <p>No tasks available</p>}
                         </ul>
+
+
                     </li>
                 )) : <p>No projects available</p>}
             </ul>

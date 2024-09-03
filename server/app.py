@@ -3,7 +3,7 @@ from flask_restful import Api, Resource
 from flask_cors import CORS
 from flask_migrate import Migrate
 from config import db
-from models import Employee, Project, Task
+from models import Employee, Project, Task, Assignment
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../instance/app.db'
@@ -53,7 +53,8 @@ class TaskResource(Resource):
         project = Project.query.get_or_404(project_id)
         employee = Employee.query.get_or_404(employee_id)
 
-        new_task = Task(description=description, project=project, employee=employee)
+        new_task = Task(description=description, project_id=project.id, employee_id=employee.id)
+
         db.session.add(new_task)
         db.session.commit()
 
@@ -83,12 +84,13 @@ class EmployeeAssignmentResource(Resource):
     def post(self, project_id):
         data = request.get_json()
         employee_id = data.get('employee_id')
-        description = data.get('description')  # Ensure the description is retrieved
+        description = data.get('description')
 
         project = Project.query.get_or_404(project_id)
         employee = Employee.query.get_or_404(employee_id)
 
-        new_task = Task(description=description, project=project, employee=employee)  # Save the description
+        new_task = Task(description=description, project_id=project.id, employee_id=employee.id)
+
         db.session.add(new_task)
         db.session.commit()
 
@@ -102,5 +104,6 @@ api.add_resource(EmployeeAssignmentResource, '/projects/<int:project_id>/assign_
 
 if __name__ == '__main__':
     with app.app_context():
+        print("App context is active")
         db.create_all()
-    app.run(debug=True)
+        app.run(debug=True)

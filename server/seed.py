@@ -1,41 +1,42 @@
+from app import app, db
+from models import Employee, Project, Task
 from faker import Faker
-from models import db, Employee, Project, Task
-from app import app  # Importing app correctly from app.py
+import random
 
 fake = Faker()
 
-# Drop all existing tables and create new ones
 with app.app_context():
-    db.drop_all()
-    db.create_all()
+    db.session.query(Task).delete()
+    db.session.query(Project).delete()
+    db.session.query(Employee).delete()
 
-    # Create a list to hold employees and projects
+    db.session.commit()
+
+    # Create some employees
     employees = []
-    projects = []
-
-    # Generate fake employees
     for _ in range(10):
         employee = Employee(name=fake.name())
-        employees.append(employee)
         db.session.add(employee)
+        employees.append(employee)
 
-    # Generate fake projects
+    # Create some projects
+    projects = []
     for _ in range(5):
-        project = Project(title=fake.catch_phrase(), description=fake.sentence())
-        projects.append(project)
+        project = Project(title=fake.bs(), description=fake.text())
         db.session.add(project)
+        projects.append(project)
 
-    db.session.commit()  # Commit the employees and projects first
+    db.session.commit()
 
-    # Generate fake tasks
-    for _ in range(20):
+    # Assign tasks to employees and projects
+    for _ in range(30):
+        project = random.choice(projects)
+        employee = random.choice(employees)
         task = Task(
             description=fake.sentence(),
-            employee=fake.random.choice(employees),
-            project=fake.random.choice(projects)
+            project_id=project.id,
+            employee_id=employee.id
         )
         db.session.add(task)
 
     db.session.commit()
-
-print("Database seeded successfully!")
