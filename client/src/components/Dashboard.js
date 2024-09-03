@@ -2,28 +2,36 @@ import React, { useState, useEffect } from 'react';
 
 const Dashboard = () => {
     const [projects, setProjects] = useState([]);
-    const [employees, setEmployees] = useState([]);
+    const [employees, setEmployees] = useState([]); 
     const [newProjectTitle, setNewProjectTitle] = useState('');
     const [newProjectDescription, setNewProjectDescription] = useState('');
-    const [selectedEmployee, setSelectedEmployee] = useState('');
+    const [selectedEmployee, setSelectedEmployee] = useState({});
+    const [editProjectId, setEditProjectId] = useState(null);  // New state to track the project being edited
 
     useEffect(() => {
         fetch('http://127.0.0.1:5000/projects')
             .then(res => res.json())
             .then(data => {
+                console.log('Fetched projects:', data);
                 setProjects(data);
             })
             .catch(error => console.error('Error fetching projects:', error));
-        
+
         fetch('http://127.0.0.1:5000/employees')
             .then(res => res.json())
             .then(data => {
+                console.log('Fetched employees:', data);
                 setEmployees(data);
             })
             .catch(error => console.error('Error fetching employees:', error));
     }, []);
 
     const handleAddProject = () => {
+        if (editProjectId !== null) {
+            handleEditProject(editProjectId);
+            return;
+        }
+
         const newProject = {
             title: newProjectTitle,
             description: newProjectDescription
@@ -63,6 +71,7 @@ const Dashboard = () => {
                 setProjects(projects.map(p => (p.id === projectId ? updated : p)));
                 setNewProjectTitle('');
                 setNewProjectDescription('');
+                setEditProjectId(null);  // Clear edit mode
             })
             .catch(error => console.error('Error editing project:', error));
     };
@@ -77,35 +86,44 @@ const Dashboard = () => {
             .catch(error => console.error('Error deleting project:', error));
     };
 
+    const startEditingProject = (projectId) => {
+        const project = projects.find(p => p.id === projectId);
+        if (project) {
+            setNewProjectTitle(project.title);
+            setNewProjectDescription(project.description);
+            setEditProjectId(projectId);
+        }
+    };
+
     const handleAssignEmployee = (projectId) => {
-        if (!selectedEmployee) {
-            console.error('No employee selected');
+        const employeeId = selectedEmployee[projectId];
+
+        if (!employeeId) {
+            alert("Please select an employee.");
             return;
         }
 
-        const assignment = {
-            employee_id: selectedEmployee
-        };
-
-        fetch(`http://127.0.0.1:5000/projects/${projectId}/assign_employee`, {
+        fetch(`http://127.0.0.1:5000/projects/${projectId}/tasks`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(assignment)
+            body: JSON.stringify({ employee_id: employeeId, description: "Assigned task" })
         })
             .then(res => res.json())
             .then(task => {
-                const updatedProjects = projects.map(p => {
-                    if (p.id === projectId) {
-                        return { ...p, tasks: [...p.tasks, task] };
-                    }
-                    return p;
-                });
-                setProjects(updatedProjects);
-                setSelectedEmployee('');
+                setProjects(projects.map(p => 
+                    p.id === projectId ? { ...p, tasks: [...p.tasks, task] } : p
+                ));
             })
             .catch(error => console.error('Error assigning employee:', error));
+    };
+
+    const handleEmployeeChange = (projectId, employeeId) => {
+        setSelectedEmployee({
+            ...selectedEmployee,
+            [projectId]: employeeId
+        });
     };
 
     return (
@@ -123,30 +141,29 @@ const Dashboard = () => {
                 onChange={(e) => setNewProjectDescription(e.target.value)}
                 placeholder="Project Description"
             />
-            <button onClick={handleAddProject}>Add Project</button>
+            <button onClick={handleAddProject}>
+                {editProjectId !== null ? "Save Changes" : "Add Project"}
+            </button>
 
             <ul>
                 {Array.isArray(projects) ? projects.map(project => (
                     <li key={project.id}>
                         <h2>{project.title}</h2>
                         <p>{project.description}</p>
-                        <select
-                            value={selectedEmployee}
-                            onChange={(e) => setSelectedEmployee(e.target.value)}
-                        >
+                        <select onChange={(e) => handleEmployeeChange(project.id, e.target.value)}>
                             <option value="">Select Employee</option>
-                            {employees.map(employee => (
-                                <option key={employee.id} value={employee.id}>
-                                    {employee.name}
-                                </option>
+                            {employees.map(emp => (
+                                <option key={emp.id} value={emp.id}>{emp.name}</option>
                             ))}
                         </select>
                         <button onClick={() => handleAssignEmployee(project.id)}>Assign Employee</button>
-                        <button onClick={() => handleEditProject(project.id)}>Edit</button>
+                        <button onClick={() => startEditingProject(project.id)}>Edit</button>
                         <button onClick={() => handleDeleteProject(project.id)}>Delete</button>
                         <ul>
-                            {project.tasks.map(task => (
-                                <li key={task.id}>{task.description} - {task.employee.name}</li>
+                            {project.tasks && project.tasks.map(task => (
+                                <li key={task.id}>
+                                    {task.description} - {task.employee.name}
+                                </li>
                             ))}
                         </ul>
                     </li>
