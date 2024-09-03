@@ -83,11 +83,12 @@ class EmployeeAssignmentResource(Resource):
     def post(self, project_id):
         data = request.get_json()
         employee_id = data.get('employee_id')
+        description = data.get('description')  # Ensure the description is retrieved
 
         project = Project.query.get_or_404(project_id)
         employee = Employee.query.get_or_404(employee_id)
 
-        new_task = Task(description=f'Assigned to {employee.name}', project=project, employee=employee)
+        new_task = Task(description=description, project=project, employee=employee)  # Save the description
         db.session.add(new_task)
         db.session.commit()
 

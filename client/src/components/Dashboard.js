@@ -6,6 +6,9 @@ const Dashboard = () => {
     const [newProjectDescription, setNewProjectDescription] = useState('');
     const [taskDescriptions, setTaskDescriptions] = useState({});
     const [selectedEmployees, setSelectedEmployees] = useState({});
+    const [editMode, setEditMode] = useState({});
+    const [editedProjectTitle, setEditedProjectTitle] = useState({});
+    const [editedProjectDescription, setEditedProjectDescription] = useState({});
     const [employees, setEmployees] = useState([]);
 
     useEffect(() => {
@@ -44,8 +47,8 @@ const Dashboard = () => {
 
     const handleEditProject = (projectId) => {
         const updatedProject = {
-            title: newProjectTitle,
-            description: newProjectDescription,
+            title: editedProjectTitle[projectId] || '',
+            description: editedProjectDescription[projectId] || '',
         };
 
         fetch(`http://127.0.0.1:5000/projects/${projectId}`, {
@@ -58,8 +61,7 @@ const Dashboard = () => {
             .then(res => res.json())
             .then(updated => {
                 setProjects(projects.map(p => (p.id === projectId ? updated : p)));
-                setNewProjectTitle('');
-                setNewProjectDescription('');
+                setEditMode({ ...editMode, [projectId]: false });
             })
             .catch(error => console.error('Error editing project:', error));
     };
@@ -89,34 +91,55 @@ const Dashboard = () => {
     };
 
     const handleAssignEmployee = (projectId) => {
-        const assignment = {
-            employee_id: selectedEmployees[projectId],
-            description: taskDescriptions[projectId],
-        };
+    const assignment = {
+        employee_id: selectedEmployees[projectId],
+        description: taskDescriptions[projectId], // Make sure this description is from the correct project
+    };
 
-        fetch(`http://127.0.0.1:5000/projects/${projectId}/assign_employee`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(assignment)
+    fetch(`http://127.0.0.1:5000/projects/${projectId}/assign_employee`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(assignment)
+    })
+        .then(res => res.json())
+        .then(() => {
+            setTaskDescriptions({
+                ...taskDescriptions,
+                [projectId]: '' // Clear the input after assigning
+            });
+            setSelectedEmployees({
+                ...selectedEmployees,
+                [projectId]: null,
+            });
+            // Re-fetch the projects to update the UI
+            fetch('http://127.0.0.1:5000/projects')
+                .then(res => res.json())
+                .then(data => setProjects(data))
+                .catch(error => console.error('Error re-fetching projects:', error));
         })
-            .then(res => res.json())
+        .catch(error => console.error('Error assigning employee:', error));
+};
+
+
+    const handleRemoveEmployee = (taskId) => {
+        fetch(`http://127.0.0.1:5000/tasks/${taskId}`, {
+            method: 'DELETE',
+        })
             .then(() => {
-                setTaskDescriptions({
-                    ...taskDescriptions,
-                    [projectId]: ''
-                });
-                setSelectedEmployees({
-                    ...selectedEmployees,
-                    [projectId]: null,
-                });
                 fetch('http://127.0.0.1:5000/projects')
                     .then(res => res.json())
                     .then(data => setProjects(data))
                     .catch(error => console.error('Error re-fetching projects:', error));
             })
-            .catch(error => console.error('Error assigning employee:', error));
+            .catch(error => console.error('Error removing employee:', error));
+    };
+
+    const toggleEditMode = (projectId, currentTitle, currentDescription) => {
+        setEditMode({ ...editMode, [projectId]: !editMode[projectId] });
+        setEditedProjectTitle({ ...editedProjectTitle, [projectId]: currentTitle });
+        setEditedProjectDescription({ ...editedProjectDescription, [projectId]: currentDescription });
     };
 
     return (
@@ -139,8 +162,28 @@ const Dashboard = () => {
             <ul>
                 {Array.isArray(projects) ? projects.map(project => (
                     <li key={project.id}>
-                        <h2>{project.title}</h2>
-                        <p>{project.description}</p>
+                        {editMode[project.id] ? (
+                            <div>
+                                <input
+                                    type="text"
+                                    value={editedProjectTitle[project.id] || ''}
+                                    onChange={(e) => setEditedProjectTitle({ ...editedProjectTitle, [project.id]: e.target.value })}
+                                    placeholder="Edit Project Title"
+                                />
+                                <input
+                                    type="text"
+                                    value={editedProjectDescription[project.id] || ''}
+                                    onChange={(e) => setEditedProjectDescription({ ...editedProjectDescription, [project.id]: e.target.value })}
+                                    placeholder="Edit Project Description"
+                                />
+                                <button onClick={() => handleEditProject(project.id)}>Save</button>
+                            </div>
+                        ) : (
+                            <div>
+                                <h2>{project.title}</h2>
+                                <p>{project.description}</p>
+                            </div>
+                        )}
                         <input
                             type="text"
                             value={taskDescriptions[project.id] || ''}
@@ -159,11 +202,14 @@ const Dashboard = () => {
                             ))}
                         </select>
                         <button onClick={() => handleAssignEmployee(project.id)}>Assign Employee</button>
-                        <button onClick={() => handleEditProject(project.id)}>Edit</button>
+                        <button onClick={() => toggleEditMode(project.id, project.title, project.description)}>Edit</button>
                         <button onClick={() => handleDeleteProject(project.id)}>Delete</button>
                         <ul>
                             {project.tasks.map(task => (
-                                <li key={task.id}>{task.description} - {task.employee.name}</li>
+                                <li key={task.id}>
+                                    {task.description} - {task.employee.name}
+                                    <button onClick={() => handleRemoveEmployee(task.id)}>Remove</button>
+                                </li>
                             ))}
                         </ul>
                     </li>
