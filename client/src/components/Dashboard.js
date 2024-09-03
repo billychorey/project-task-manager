@@ -2,36 +2,25 @@ import React, { useState, useEffect } from 'react';
 
 const Dashboard = () => {
     const [projects, setProjects] = useState([]);
-    const [employees, setEmployees] = useState([]);
     const [newProjectTitle, setNewProjectTitle] = useState('');
     const [newProjectDescription, setNewProjectDescription] = useState('');
-    const [selectedEmployee, setSelectedEmployee] = useState({});
-    const [editProjectId, setEditProjectId] = useState(null);
+    const [taskDescription, setTaskDescription] = useState('');
+    const [selectedEmployee, setSelectedEmployee] = useState('');
+    const [employees, setEmployees] = useState([]);
 
     useEffect(() => {
         fetch('http://127.0.0.1:5000/projects')
             .then(res => res.json())
-            .then(data => {
-                console.log('Fetched projects:', data);
-                setProjects(data);
-            })
+            .then(data => setProjects(data))
             .catch(error => console.error('Error fetching projects:', error));
 
         fetch('http://127.0.0.1:5000/employees')
             .then(res => res.json())
-            .then(data => {
-                console.log('Fetched employees:', data);
-                setEmployees(data);
-            })
+            .then(data => setEmployees(data))
             .catch(error => console.error('Error fetching employees:', error));
     }, []);
 
     const handleAddProject = () => {
-        if (editProjectId !== null) {
-            handleEditProject(editProjectId);
-            return;
-        }
-
         const newProject = {
             title: newProjectTitle,
             description: newProjectDescription
@@ -71,105 +60,94 @@ const Dashboard = () => {
                 setProjects(projects.map(p => (p.id === projectId ? updated : p)));
                 setNewProjectTitle('');
                 setNewProjectDescription('');
-                setEditProjectId(null);  
             })
             .catch(error => console.error('Error editing project:', error));
     };
 
-    const handleDeleteProject = (projectId) => {
-        fetch(`http://127.0.0.1:5000/projects/${projectId}`, {
-            method: 'DELETE',
-        })
-            .then(() => {
-                setProjects(projects.filter(p => p.id !== projectId));
-            })
-            .catch(error => console.error('Error deleting project:', error));
-    };
-
-    const startEditingProject = (projectId) => {
-        const project = projects.find(p => p.id === projectId);
-        if (project) {
-            setNewProjectTitle(project.title);
-            setNewProjectDescription(project.description);
-            setEditProjectId(projectId);
-        }
-    };
-
-    const handleAssignEmployee = (projectId) => {
-        const employeeId = selectedEmployee[projectId];
-
-        if (!employeeId) {
-            alert("Please select an employee.");
-            return;
-        }
+    const handleAssignTask = (projectId) => {
+        const newTask = {
+            description: taskDescription,
+            employee_id: selectedEmployee
+        };
 
         fetch(`http://127.0.0.1:5000/projects/${projectId}/tasks`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ employee_id: employeeId, description: "Assigned task" })
+            body: JSON.stringify(newTask)
         })
             .then(res => res.json())
             .then(task => {
                 setProjects(projects.map(p => 
-                    p.id === projectId ? { ...p, tasks: [...p.tasks, task] } : p
+                    p.id === projectId 
+                    ? { ...p, tasks: [...p.tasks, task] } 
+                    : p
                 ));
+                setTaskDescription('');
+                setSelectedEmployee('');
             })
-            .catch(error => console.error('Error assigning employee:', error));
-    };
-
-    const handleEmployeeChange = (projectId, employeeId) => {
-        setSelectedEmployee({
-            ...selectedEmployee,
-            [projectId]: employeeId
-        });
+            .catch(error => console.error('Error assigning task:', error));
     };
 
     return (
         <div>
             <h1>Projects Dashboard</h1>
-
-            <div style={{ marginBottom: '10px' }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Project Name:</label>
-                <input
-                    type="text"
-                    value={newProjectTitle}
-                    onChange={(e) => setNewProjectTitle(e.target.value)}
-                    placeholder="Project Title"
-                    style={{ width: '100%', marginBottom: '10px' }}
-                />
+            <div>
+                <label>
+                    Project Name:
+                    <input
+                        type="text"
+                        value={newProjectTitle}
+                        onChange={(e) => setNewProjectTitle(e.target.value)}
+                        placeholder="Project Title"
+                    />
+                </label>
+                <label>
+                    Project Description:
+                    <input
+                        type="text"
+                        value={newProjectDescription}
+                        onChange={(e) => setNewProjectDescription(e.target.value)}
+                        placeholder="Project Description"
+                    />
+                </label>
+                <button onClick={handleAddProject}>Add Project</button>
             </div>
-
-            <div style={{ marginBottom: '10px' }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Project Description:</label>
-                <input
-                    type="text"
-                    value={newProjectDescription}
-                    onChange={(e) => setNewProjectDescription(e.target.value)}
-                    placeholder="Project Description"
-                    style={{ width: '100%', marginBottom: '10px' }}
-                />
-            </div>
-
-            <button onClick={handleAddProject} style={{ marginBottom: '20px' }}>
-                {editProjectId !== null ? "Save Changes" : "Add Project"}
-            </button>
 
             <ul>
                 {Array.isArray(projects) ? projects.map(project => (
-                    <li key={project.id} style={{ marginBottom: '20px' }}>
+                    <li key={project.id}>
                         <h2>{project.title}</h2>
                         <p>{project.description}</p>
-                        <select onChange={(e) => handleEmployeeChange(project.id, e.target.value)}>
-                            <option value="">Select Employee</option>
-                            {employees.map(emp => (
-                                <option key={emp.id} value={emp.id}>{emp.name}</option>
-                            ))}
-                        </select>
-                        <button onClick={() => handleAssignEmployee(project.id)} style={{ marginLeft: '10px' }}>Assign Employee</button>
-                        <button onClick={() => startEditingProject(project.id)} style={{ marginLeft: '10px' }}>Edit</button>
-                        <button onClick={() => handleDeleteProject(project.id)} style={{ marginLeft: '10px' }}>Delete</button>
+                        <div>
+                            <label>
+                                Employee:
+                                <select 
+                                    value={selectedEmployee}
+                                    onChange={(e) => setSelectedEmployee(e.target.value)}
+                                >
+                                    <option value="">Select Employee</option>
+                                    {employees.map(emp => (
+                                        <option key={emp.id} value={emp.id}>
+                                            {emp.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label>
+                                Task Description:
+                                <input
+                                    type="text"
+                                    value={taskDescription}
+                                    onChange={(e) => setTaskDescription(e.target.value)}
+                                    placeholder="Task Description"
+                                />
+                            </label>
+                            <button onClick={() => handleAssignTask(project.id)}>Assign Task</button>
+                        </div>
+                        <button onClick={() => handleEditProject(project.id)}>Edit</button>
+                        <button onClick={() => handleDeleteProject(project.id)}>Delete</button>
                         <ul>
                             {project.tasks && project.tasks.map(task => (
                                 <li key={task.id}>
