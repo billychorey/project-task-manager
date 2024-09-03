@@ -1,5 +1,6 @@
 from config import db
 from sqlalchemy_serializer import SerializerMixin
+from sqlalchemy.orm import relationship, backref
 
 # Association Model to store many-to-many relationship between employee and project
 class Assignment(db.Model, SerializerMixin):
@@ -32,6 +33,9 @@ class Employee(db.Model, SerializerMixin):
     # Relationship mapping the employee to related assignments
     assignments = db.relationship('Assignment', back_populates='employee', cascade='all, delete-orphan')
 
+    # Relationship mapping the employee to related tasks (with cascading delete)
+    tasks_assigned = db.relationship('Task', back_populates='assigned_employee', cascade='all, delete-orphan')
+
     # Association proxy to get projects for this employee through assignments
     projects = db.relationship('Project', secondary='assignments', viewonly=True)
 
@@ -60,10 +64,10 @@ class Task(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String, nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id', ondelete='CASCADE'), nullable=True)
 
     # Relationship mapping the task to the assigned employee
-    assigned_employee = db.relationship('Employee', backref='tasks_assigned')
+    assigned_employee = db.relationship('Employee', back_populates='tasks_assigned')
 
     # Relationship mapping the task to the project
     project = db.relationship('Project', back_populates='tasks')

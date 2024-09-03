@@ -11,7 +11,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 migrate = Migrate(app, db)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE"]}})
 api = Api(app)
 
 class ProjectListResource(Resource):
@@ -67,6 +67,10 @@ class TaskResource(Resource):
         return '', 204
 
 class EmployeeResource(Resource):
+    def get(self):
+        employees = Employee.query.all()
+        return [employee.to_dict() for employee in employees], 200
+
     def post(self):
         data = request.get_json()
         name = data.get('name')
@@ -76,10 +80,17 @@ class EmployeeResource(Resource):
         db.session.commit()
         return new_employee.to_dict(), 201
 
-    def get(self):
-        employees = Employee.query.all()
-        return [employee.to_dict() for employee in employees], 200
+    def delete(self, employee_id):
+        employee = Employee.query.get_or_404(employee_id)
 
+        # Manually delete associated tasks
+        Task.query.filter_by(employee_id=employee_id).delete()
+
+        # Delete the employee
+        db.session.delete(employee)
+        db.session.commit()
+        return '', 204
+    
 class EmployeeAssignmentResource(Resource):
     def post(self, project_id):
         data = request.get_json()
@@ -99,7 +110,7 @@ class EmployeeAssignmentResource(Resource):
 api.add_resource(ProjectListResource, '/projects')
 api.add_resource(ProjectResource, '/projects/<int:project_id>')
 api.add_resource(TaskResource, '/projects/<int:project_id>/tasks', '/tasks/<int:task_id>')
-api.add_resource(EmployeeResource, '/employees')
+api.add_resource(EmployeeResource, '/employees', '/employees/<int:employee_id>')
 api.add_resource(EmployeeAssignmentResource, '/projects/<int:project_id>/assign_employee')
 
 if __name__ == '__main__':
