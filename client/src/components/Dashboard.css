@@ -1,0 +1,54 @@
+/* Dashboard.css */
+
+h1 {
+    text-align: center;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+input[type="text"] {
+    margin: 10px 5px;
+    padding: 5px;
+    font-size: 1em;
+}
+
+button {
+    margin: 5px;
+    padding: 5px 10px;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+li {
+    margin: 10px 0;
+}
+
+div.project-item {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+div.project-item h2 {
+    margin: 0 0 10px 0;
+}
+
+div.project-item p {
+    font-style: italic;
+    color: #555;
+}
+
+div.project-item .delete-section {
+    margin-top: 20px;
+    color: red;
+}
+
+div.project-item .delete-section button {
+    background-color: #ff4c4c;
+    color: white;
+}

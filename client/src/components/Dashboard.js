@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './Dashboard.css';
 
 const Dashboard = () => {
     const [projects, setProjects] = useState([]);
@@ -24,26 +25,33 @@ const Dashboard = () => {
     }, []);
 
     const handleAddProject = () => {
-        const newProject = {
-            title: newProjectTitle,
-            description: newProjectDescription,
-        };
+    // Check if the project title and description are not empty
+    if (!newProjectTitle.trim() || !newProjectDescription.trim()) {
+        alert("Please provide both a project title and description.");
+        return;
+    }
 
-        fetch('http://127.0.0.1:5000/projects', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(newProject)
-        })
-            .then(res => res.json())
-            .then(project => {
-                setProjects([...projects, project]);
-                setNewProjectTitle('');
-                setNewProjectDescription('');
-            })
-            .catch(error => console.error('Error adding project:', error));
+    const newProject = {
+        title: newProjectTitle,
+        description: newProjectDescription,
     };
+
+    fetch('http://127.0.0.1:5000/projects', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newProject)
+    })
+        .then(res => res.json())
+        .then(project => {
+            setProjects([...projects, project]);
+            setNewProjectTitle('');
+            setNewProjectDescription('');
+        })
+        .catch(error => console.error('Error adding project:', error));
+};
+
 
     const handleEditProject = (projectId) => {
         const updatedProject = {
@@ -91,35 +99,42 @@ const Dashboard = () => {
     };
 
     const handleAssignEmployee = (projectId) => {
-        const assignment = {
-            employee_id: selectedEmployees[projectId],
-            description: taskDescriptions[projectId],
-        };
+    // Check if the task description is not empty and an employee is selected
+    if (!taskDescriptions[projectId]?.trim() || !selectedEmployees[projectId]) {
+        alert("Please provide a task description and select an employee.");
+        return;
+    }
 
-        fetch(`http://127.0.0.1:5000/projects/${projectId}/assign_employee`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(assignment)
-        })
-            .then(res => res.json())
-            .then(() => {
-                setTaskDescriptions({
-                    ...taskDescriptions,
-                    [projectId]: ''
-                });
-                setSelectedEmployees({
-                    ...selectedEmployees,
-                    [projectId]: null,
-                });
-                fetch('http://127.0.0.1:5000/projects')
-                    .then(res => res.json())
-                    .then(data => setProjects(data))
-                    .catch(error => console.error('Error re-fetching projects:', error));
-            })
-            .catch(error => console.error('Error assigning employee:', error));
+    const assignment = {
+        employee_id: selectedEmployees[projectId],
+        description: taskDescriptions[projectId],
     };
+
+    fetch(`http://127.0.0.1:5000/projects/${projectId}/assign_employee`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(assignment)
+    })
+        .then(res => res.json())
+        .then(() => {
+            setTaskDescriptions({
+                ...taskDescriptions,
+                [projectId]: ''
+            });
+            setSelectedEmployees({
+                ...selectedEmployees,
+                [projectId]: null,
+            });
+            fetch('http://127.0.0.1:5000/projects')
+                .then(res => res.json())
+                .then(data => setProjects(data))
+                .catch(error => console.error('Error re-fetching projects:', error));
+        })
+        .catch(error => console.error('Error assigning employee:', error));
+};
+
 
     const handleRemoveEmployee = (taskId) => {
         fetch(`http://127.0.0.1:5000/tasks/${taskId}`, {
