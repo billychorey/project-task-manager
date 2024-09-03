@@ -1,42 +1,33 @@
-from app import app, db
+from config import db
 from models import Employee, Project, Task
 from faker import Faker
-import random
+from app import app  # Import your Flask app instance
 
 fake = Faker()
 
-with app.app_context():
-    db.session.query(Task).delete()
-    db.session.query(Project).delete()
-    db.session.query(Employee).delete()
-
-    db.session.commit()
+with app.app_context():  # Ensure operations are within the application context
+    # Clean up the database
+    db.drop_all()
+    db.create_all()
 
     # Create some employees
-    employees = []
-    for _ in range(10):
-        employee = Employee(name=fake.name())
-        db.session.add(employee)
-        employees.append(employee)
-
-    # Create some projects
-    projects = []
-    for _ in range(5):
-        project = Project(title=fake.bs(), description=fake.text())
-        db.session.add(project)
-        projects.append(project)
-
+    employees = [Employee(name=fake.name()) for _ in range(5)]
+    db.session.add_all(employees)
     db.session.commit()
 
-    # Assign tasks to employees and projects
-    for _ in range(30):
-        project = random.choice(projects)
-        employee = random.choice(employees)
-        task = Task(
-            description=fake.sentence(),
-            project_id=project.id,
-            employee_id=employee.id
-        )
-        db.session.add(task)
+    # Create some projects
+    projects = [Project(title=fake.catch_phrase(), description=fake.paragraph()) for _ in range(2)]
+    db.session.add_all(projects)
+    db.session.commit()
+
+    # Create tasks and assign to projects and employees
+    for project in projects:
+        for _ in range(5):
+            task = Task(
+                description=fake.sentence(),
+                project_id=project.id,
+                employee_id=fake.random_element(employees).id
+            )
+            db.session.add(task)
 
     db.session.commit()

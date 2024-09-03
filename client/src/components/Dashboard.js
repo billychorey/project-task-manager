@@ -19,7 +19,10 @@ const Dashboard = () => {
 
         fetch('http://127.0.0.1:5000/employees')
             .then(res => res.json())
-            .then(data => setEmployees(data))
+            .then(data => {
+                console.log(data); // Debugging: check if data is an array
+                setEmployees(Array.isArray(data) ? data : []);
+            })
             .catch(error => console.error('Error fetching employees:', error));
     }, []);
 
@@ -192,6 +195,7 @@ const Dashboard = () => {
                                 <p>{project.description}</p>
                             </div>
                         )}
+                        <label>Add Task:</label>
                         <input
                             type="text"
                             value={taskDescriptions[project.id] || ''}
@@ -205,7 +209,7 @@ const Dashboard = () => {
                             <option value="">Select Employee</option>
                             {employees.map(employee => (
                                 <option key={employee.id} value={employee.id}>
-                                    {employee?.name ? employee.name : "Unnamed"}
+                                    {employee.name || "Unnamed"}
                                 </option>
                             ))}
                         </select>
@@ -217,13 +221,11 @@ const Dashboard = () => {
                         <ul>
                             {Array.isArray(project.tasks) && project.tasks.length > 0 ? project.tasks.map(task => (
                                 <li key={task.id}>
-                                    {task.description} - {task.assigned_employee?.name || "Unnamed"}
+                                    {task.description} - {task.assigned_employee ? task.assigned_employee.name || "Unnamed" : "Unnamed"}
                                     <button onClick={() => handleRemoveEmployee(task.id)}>Remove</button>
                                 </li>
                             )) : <p>No tasks available</p>}
                         </ul>
-
-
                     </li>
                 )) : <p>No projects available</p>}
             </ul>
