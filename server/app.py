@@ -11,7 +11,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 migrate = Migrate(app, db)
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": "*"}})
 api = Api(app)
 
 class ProjectListResource(Resource):
@@ -66,28 +66,38 @@ class TaskResource(Resource):
         return '', 204
 
 class EmployeeResource(Resource):
+    def post(self):
+        data = request.get_json()
+        name = data.get('name')
+
+        new_employee = Employee(name=name)
+        db.session.add(new_employee)
+        db.session.commit()
+        return new_employee.to_dict(), 201
+
+    def get(self):
+        employees = Employee.query.all()
+        return [employee.to_dict() for employee in employees], 200
+
+class EmployeeAssignmentResource(Resource):
     def post(self, project_id):
         data = request.get_json()
-        employee_name = data.get('name')
+        employee_id = data.get('employee_id')
 
-        employee = Employee.query.filter_by(name=employee_name).first()
-        if not employee:
-            employee = Employee(name=employee_name)
-            db.session.add(employee)
-            db.session.commit()
-
-        return employee.to_dict(), 201
-
-    def delete(self, employee_id):
+        project = Project.query.get_or_404(project_id)
         employee = Employee.query.get_or_404(employee_id)
-        db.session.delete(employee)
+
+        new_task = Task(description=f'Assigned to {employee.name}', project=project, employee=employee)
+        db.session.add(new_task)
         db.session.commit()
-        return '', 204
+
+        return new_task.to_dict(), 201
 
 api.add_resource(ProjectListResource, '/projects')
 api.add_resource(ProjectResource, '/projects/<int:project_id>')
 api.add_resource(TaskResource, '/projects/<int:project_id>/tasks', '/tasks/<int:task_id>')
-api.add_resource(EmployeeResource, '/projects/<int:project_id>/employees', '/employees/<int:employee_id>')
+api.add_resource(EmployeeResource, '/employees')
+api.add_resource(EmployeeAssignmentResource, '/projects/<int:project_id>/assign_employee')
 
 if __name__ == '__main__':
     with app.app_context():
