@@ -1,152 +1,115 @@
 import React, { useState, useEffect } from 'react';
-import SimpleForm from './SimpleForm';
 
-function Dashboard() {
+const Dashboard = () => {
     const [projects, setProjects] = useState([]);
-    const [error, setError] = useState(null);
-    const [editingProject, setEditingProject] = useState(null);
+    const [newProjectTitle, setNewProjectTitle] = useState('');
+    const [newProjectDescription, setNewProjectDescription] = useState('');
+    const [editProjectId, setEditProjectId] = useState(null);
 
     useEffect(() => {
-    fetch('http://127.0.0.1:5000/projects', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then((res) => {
-        if (!res.ok) {
-            throw new Error('Failed to fetch projects');
-        }
-        return res.json();
-    })
-    .then((data) => {
-        if (Array.isArray(data)) {
-            setProjects(data);
-        } else {
-            console.error('Unexpected response format:', data);
-            setError('Failed to fetch projects');
-        }
-    })
-    .catch((err) => {
-        console.error('Error fetching projects:', err);
-        setError('Failed to fetch projects');
-    });
-}, []);
+        fetch('http://127.0.0.1:5000/projects')
+            .then(res => res.json())
+            .then(data => {
+                console.log('Fetched projects:', data);
+                setProjects(data);
+            })
+            .catch(error => console.error('Error fetching projects:', error));
+    }, []);
 
+    const handleAddProject = () => {
+        const newProject = {
+            title: newProjectTitle,
+            description: newProjectDescription
+        };
 
-    const handleCreateProject = (newProject) => {
         fetch('http://127.0.0.1:5000/projects', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify(newProject),
+            body: JSON.stringify(newProject)
         })
-        .then((res) => {
-            if (!res.ok) {
-                return res.json().then((error) => { throw new Error(error.error); });
-            }
-            return res.json();
+            .then(res => res.json())
+            .then(project => {
+                setProjects([...projects, project]);
+                setNewProjectTitle('');
+                setNewProjectDescription('');
+            })
+            .catch(error => console.error('Error adding project:', error));
+    };
+
+    const handleEditProject = (project) => {
+        setEditProjectId(project.id);
+        setNewProjectTitle(project.title);
+        setNewProjectDescription(project.description);
+    };
+
+    const handleSaveEditProject = () => {
+        const updatedProject = {
+            title: newProjectTitle,
+            description: newProjectDescription
+        };
+
+        fetch(`http://127.0.0.1:5000/projects/${editProjectId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updatedProject)
         })
-        .then((data) => {
-            setProjects([...projects, data]);
-            setError(null);
-        })
-        .catch((err) => {
-            console.error('Error creating project:', err);
-            setError('Failed to create project');
-        });
+            .then(res => res.json())
+            .then(updated => {
+                setProjects(projects.map(p => (p.id === editProjectId ? updated : p)));
+                setEditProjectId(null);
+                setNewProjectTitle('');
+                setNewProjectDescription('');
+            })
+            .catch(error => console.error('Error editing project:', error));
     };
 
     const handleDeleteProject = (projectId) => {
         fetch(`http://127.0.0.1:5000/projects/${projectId}`, {
             method: 'DELETE',
         })
-        .then((res) => {
-            if (!res.ok) {
-                throw new Error('Failed to delete project');
-            }
-            setProjects(projects.filter((project) => project.id !== projectId));
-        })
-        .catch((err) => {
-            console.error('Error deleting project:', err);
-            setError('Failed to delete project');
-        });
-    };
-
-    const handleEditProject = (projectId) => {
-        const projectToEdit = projects.find((project) => project.id === projectId);
-        setEditingProject({ ...projectToEdit });
-    };
-
-    const handleUpdateProject = () => {
-        fetch(`http://127.0.0.1:5000/projects/${editingProject.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(editingProject),
-        })
-        .then((res) => {
-            if (!res.ok) {
-                throw new Error('Failed to update project');
-            }
-            return res.json();
-        })
-        .then((updatedProject) => {
-            setProjects(
-                projects.map((project) =>
-                    project.id === updatedProject.id ? updatedProject : project
-                )
-            );
-            setEditingProject(null);
-            setError(null);
-        })
-        .catch((err) => {
-            console.error('Error updating project:', err);
-            setError('Failed to update project');
-        });
+            .then(() => {
+                setProjects(projects.filter(p => p.id !== projectId));
+            })
+            .catch(error => console.error('Error deleting project:', error));
     };
 
     return (
         <div>
-            <h1>Projects</h1>
-            {error && <div style={{ color: 'red' }}>{error}</div>}
-            <SimpleForm onSubmit={handleCreateProject} />
+            <h1>Projects Dashboard</h1>
+            <input
+                type="text"
+                value={newProjectTitle}
+                onChange={(e) => setNewProjectTitle(e.target.value)}
+                placeholder="Project Title"
+            />
+            <input
+                type="text"
+                value={newProjectDescription}
+                onChange={(e) => setNewProjectDescription(e.target.value)}
+                placeholder="Project Description"
+            />
+            {editProjectId ? (
+                <button onClick={handleSaveEditProject}>Save Project</button>
+            ) : (
+                <button onClick={handleAddProject}>Add Project</button>
+            )}
+
             <ul>
-                {projects.map((project) => (
+                {Array.isArray(projects) ? projects.map(project => (
                     <li key={project.id}>
-                        {editingProject && editingProject.id === project.id ? (
-                            <div>
-                                <input
-                                    type="text"
-                                    value={editingProject.title}
-                                    onChange={(e) =>
-                                        setEditingProject({ ...editingProject, title: e.target.value })
-                                    }
-                                />
-                                <textarea
-                                    value={editingProject.description}
-                                    onChange={(e) =>
-                                        setEditingProject({ ...editingProject, description: e.target.value })
-                                    }
-                                />
-                                <button onClick={handleUpdateProject}>Save</button>
-                                <button onClick={() => setEditingProject(null)}>Cancel</button>
-                            </div>
-                        ) : (
-                            <div>
-                                <h2>{project.title}</h2>
-                                <p>{project.description}</p>
-                                <button onClick={() => handleEditProject(project.id)}>Edit</button>
-                                <button onClick={() => handleDeleteProject(project.id)}>Delete</button>
-                            </div>
-                        )}
+                        <h2>{project.title}</h2>
+                        <p>{project.description}</p>
+                        <button onClick={() => handleEditProject(project)}>Edit</button>
+                        <button onClick={() => handleDeleteProject(project.id)}>Delete</button>
                     </li>
-                ))}
+                )) : <p>No projects available</p>}
             </ul>
         </div>
     );
-}
+};
 
 export default Dashboard;
