@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 
 const Dashboard = () => {
     const [projects, setProjects] = useState([]);
-    const [employees, setEmployees] = useState([]); 
+    const [employees, setEmployees] = useState([]);
     const [newProjectTitle, setNewProjectTitle] = useState('');
     const [newProjectDescription, setNewProjectDescription] = useState('');
     const [selectedEmployee, setSelectedEmployee] = useState({});
-    const [editProjectId, setEditProjectId] = useState(null);  // New state to track the project being edited
+    const [editProjectId, setEditProjectId] = useState(null);
 
     useEffect(() => {
         fetch('http://127.0.0.1:5000/projects')
@@ -71,7 +71,7 @@ const Dashboard = () => {
                 setProjects(projects.map(p => (p.id === projectId ? updated : p)));
                 setNewProjectTitle('');
                 setNewProjectDescription('');
-                setEditProjectId(null);  // Clear edit mode
+                setEditProjectId(null);  
             })
             .catch(error => console.error('Error editing project:', error));
     };
@@ -129,25 +129,36 @@ const Dashboard = () => {
     return (
         <div>
             <h1>Projects Dashboard</h1>
-            <input
-                type="text"
-                value={newProjectTitle}
-                onChange={(e) => setNewProjectTitle(e.target.value)}
-                placeholder="Project Title"
-            />
-            <input
-                type="text"
-                value={newProjectDescription}
-                onChange={(e) => setNewProjectDescription(e.target.value)}
-                placeholder="Project Description"
-            />
-            <button onClick={handleAddProject}>
+
+            <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>Project Name:</label>
+                <input
+                    type="text"
+                    value={newProjectTitle}
+                    onChange={(e) => setNewProjectTitle(e.target.value)}
+                    placeholder="Project Title"
+                    style={{ width: '100%', marginBottom: '10px' }}
+                />
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>Project Description:</label>
+                <input
+                    type="text"
+                    value={newProjectDescription}
+                    onChange={(e) => setNewProjectDescription(e.target.value)}
+                    placeholder="Project Description"
+                    style={{ width: '100%', marginBottom: '10px' }}
+                />
+            </div>
+
+            <button onClick={handleAddProject} style={{ marginBottom: '20px' }}>
                 {editProjectId !== null ? "Save Changes" : "Add Project"}
             </button>
 
             <ul>
                 {Array.isArray(projects) ? projects.map(project => (
-                    <li key={project.id}>
+                    <li key={project.id} style={{ marginBottom: '20px' }}>
                         <h2>{project.title}</h2>
                         <p>{project.description}</p>
                         <select onChange={(e) => handleEmployeeChange(project.id, e.target.value)}>
@@ -156,9 +167,9 @@ const Dashboard = () => {
                                 <option key={emp.id} value={emp.id}>{emp.name}</option>
                             ))}
                         </select>
-                        <button onClick={() => handleAssignEmployee(project.id)}>Assign Employee</button>
-                        <button onClick={() => startEditingProject(project.id)}>Edit</button>
-                        <button onClick={() => handleDeleteProject(project.id)}>Delete</button>
+                        <button onClick={() => handleAssignEmployee(project.id)} style={{ marginLeft: '10px' }}>Assign Employee</button>
+                        <button onClick={() => startEditingProject(project.id)} style={{ marginLeft: '10px' }}>Edit</button>
+                        <button onClick={() => handleDeleteProject(project.id)} style={{ marginLeft: '10px' }}>Delete</button>
                         <ul>
                             {project.tasks && project.tasks.map(task => (
                                 <li key={task.id}>
