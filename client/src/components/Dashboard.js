@@ -91,37 +91,35 @@ const Dashboard = () => {
     };
 
     const handleAssignEmployee = (projectId) => {
-    const assignment = {
-        employee_id: selectedEmployees[projectId],
-        description: taskDescriptions[projectId], // Make sure this description is from the correct project
-    };
+        const assignment = {
+            employee_id: selectedEmployees[projectId],
+            description: taskDescriptions[projectId],
+        };
 
-    fetch(`http://127.0.0.1:5000/projects/${projectId}/assign_employee`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(assignment)
-    })
-        .then(res => res.json())
-        .then(() => {
-            setTaskDescriptions({
-                ...taskDescriptions,
-                [projectId]: '' // Clear the input after assigning
-            });
-            setSelectedEmployees({
-                ...selectedEmployees,
-                [projectId]: null,
-            });
-            // Re-fetch the projects to update the UI
-            fetch('http://127.0.0.1:5000/projects')
-                .then(res => res.json())
-                .then(data => setProjects(data))
-                .catch(error => console.error('Error re-fetching projects:', error));
+        fetch(`http://127.0.0.1:5000/projects/${projectId}/assign_employee`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(assignment)
         })
-        .catch(error => console.error('Error assigning employee:', error));
-};
-
+            .then(res => res.json())
+            .then(() => {
+                setTaskDescriptions({
+                    ...taskDescriptions,
+                    [projectId]: ''
+                });
+                setSelectedEmployees({
+                    ...selectedEmployees,
+                    [projectId]: null,
+                });
+                fetch('http://127.0.0.1:5000/projects')
+                    .then(res => res.json())
+                    .then(data => setProjects(data))
+                    .catch(error => console.error('Error re-fetching projects:', error));
+            })
+            .catch(error => console.error('Error assigning employee:', error));
+    };
 
     const handleRemoveEmployee = (taskId) => {
         fetch(`http://127.0.0.1:5000/tasks/${taskId}`, {
