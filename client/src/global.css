@@ -1,5 +1,16 @@
-/* Dashboard.css */
+/* global.css */
+* {
+    font-family: sans-serif;
+}
 
+a:visited, a {
+    color: inherit;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
 h1 {
     text-align: center;
     font-size: 2.5em;
@@ -51,4 +62,26 @@ div.project-item .delete-section {
 div.project-item .delete-section button {
     background-color: #ff4c4c;
     color: white;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+}
+
+nav {
+    display: block;
+    width: 80%;
+    margin: 0 auto;
+}
+
+nav ul {
+    display: flex;
+    justify-content: space-around;
+}
+
+nav li {
+    display: block;
+    margin-right: 1.5rem;
+    font-weight: bold;
 }

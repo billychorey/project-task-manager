@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';  // For validation
 
 function ProjectList() {
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
-  const [newProjectTitle, setNewProjectTitle] = useState('');
-  const [newProjectDescription, setNewProjectDescription] = useState('');
   const [tasks, setTasks] = useState([]);
-  const [newTaskDescription, setNewTaskDescription] = useState('');
-  const [selectedEmployeeForTask, setSelectedEmployeeForTask] = useState('');
   const [employees, setEmployees] = useState([]);
-  const [newProjectFormVisible, setNewProjectFormVisible] = useState(false);
 
   useEffect(() => {
     fetch('/projects')  
@@ -25,33 +22,26 @@ function ProjectList() {
       .catch((error) => console.error('Error fetching employees:', error));
   }, []);
 
-const handleProjectSelect = (project) => {
-  setSelectedProject(project);
-  setNewProjectTitle(project.title);
-  setNewProjectDescription(project.description);
+  const handleProjectSelect = (project) => {
+    setSelectedProject(project);
+    fetch(`/projects/${project.id}/tasks`)
+      .then((response) => response.json())
+      .then((data) => setTasks(Array.isArray(data) ? data : []))
+      .catch((error) => {
+        console.error('Error fetching tasks:', error);
+        setTasks([]);
+      });
+  };
 
-  // Fetch tasks for the selected project
-  fetch(`/projects/${project.id}/tasks`)
-    .then((response) => response.json())
-    .then((data) => {
-      setTasks(Array.isArray(data) ? data : []);  // Update the task list in state
-    })
-    .catch((error) => {
-      console.error('Error fetching tasks:', error);
-      setTasks([]);  // Reset tasks in case of an error
-    });
-};
-
-
-  const handleSaveProject = () => {
+  const handleSaveProject = (values) => {
     fetch(`/projects/${selectedProject.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        title: newProjectTitle,
-        description: newProjectDescription,
+        title: values.title,
+        description: values.description,
       }),
     })
       .then((response) => response.json())
@@ -66,8 +56,8 @@ const handleProjectSelect = (project) => {
       .catch((error) => console.error('Error saving project:', error));
   };
 
-  const handleAddTask = () => {
-    if (!selectedEmployeeForTask || !newTaskDescription) {
+  const handleAddTask = (values) => {
+    if (!values.employee_id || !values.description) {
       alert('Please select an employee and provide a task description.');
       return;
     }
@@ -78,141 +68,113 @@ const handleProjectSelect = (project) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        description: newTaskDescription,
-        employee_id: selectedEmployeeForTask,
+        description: values.description,
+        employee_id: values.employee_id,
       }),
     })
       .then((response) => response.json())
       .then((newTask) => {
         setTasks([...tasks, newTask]);  
-        setNewTaskDescription('');  
-        setSelectedEmployeeForTask('');  
       })
       .catch((error) => console.error('Error adding task:', error));
   };
 
-  const handleAddNewProject = () => {
-    fetch('/projects', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: newProjectTitle,
-        description: newProjectDescription,
-      }),
-    })
-      .then((response) => response.json())
-      .then((newProject) => {
-        setProjects([...projects, newProject]);  
-        setNewProjectTitle('');
-        setNewProjectDescription('');
-        setNewProjectFormVisible(false); 
-      })
-      .catch((error) => console.error('Error adding new project:', error));
-  };
+  // Project Form Validation Schema
+  const projectValidationSchema = Yup.object({
+    title: Yup.string()
+        .required('Project title is required')
+        .matches(/^[a-zA-Z0-9 ]*$/, 'Only letters and numbers are allowed'),
+    description: Yup.string()
+        .required('Project description is required')  // Make description required
+        .max(200, 'Description can\'t be longer than 200 characters'),
+    });
 
-  const handleDeleteProject = (projectId) => {
-    fetch(`/projects/${projectId}`, {
-      method: 'DELETE',
-    })
-      .then(() => {
-        setProjects(projects.filter((project) => project.id !== projectId));
-        if (selectedProject && selectedProject.id === projectId) {
-          setSelectedProject(null);  
-        }
-      })
-      .catch((error) => console.error('Error deleting project:', error));
-  };
+  // Task Form Validation Schema
+  const taskValidationSchema = Yup.object({
+    description: Yup.string()
+      .required('Task description is required'),
+    employee_id: Yup.string()
+      .required('Please select an employee'),
+  });
 
   return (
     <div>
-      <h1>Edit Projects</h1>
-      {projects.length === 0 ? (
-        <p>No projects available.</p>
-      ) : (
-        <ul>
-          {projects.map((project) => (
-            <li key={project.id}>
-              {project.title}{' '}
-              <button onClick={() => handleProjectSelect(project)}>Edit</button>{' '}
-              <button onClick={() => handleDeleteProject(project.id)}>Delete</button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {newProjectFormVisible ? (
-        <div>
-          <h2>Create New Project</h2>
-          <input
-            type="text"
-            placeholder="Project Title"
-            value={newProjectTitle}
-            onChange={(e) => setNewProjectTitle(e.target.value)}
-          />
-          <textarea
-            placeholder="Project Description"
-            value={newProjectDescription}
-            onChange={(e) => setNewProjectDescription(e.target.value)}
-          />
-          <button onClick={handleAddNewProject}>Create Project</button>
-        </div>
-      ) : (
-        <button onClick={() => setNewProjectFormVisible(true)}>
-          Add New Project
-        </button>
-      )}
+      <h1>Projects</h1>
+      <ul>
+        {projects.map((project) => (
+          <li key={project.id}>
+            {project.title}{' '}
+            <button onClick={() => handleProjectSelect(project)}>Edit</button>
+          </li>
+        ))}
+      </ul>
 
       {selectedProject && (
         <div>
           <h2>Editing: {selectedProject.title}</h2>
-          <input
-            type="text"
-            placeholder="Project Title"
-            value={newProjectTitle}
-            onChange={(e) => setNewProjectTitle(e.target.value)}
-          />
-          <textarea
-            placeholder="Project Description"
-            value={newProjectDescription}
-            onChange={(e) => setNewProjectDescription(e.target.value)}
-          />
-          <button onClick={handleSaveProject}>Save Project</button>
+
+          <Formik
+            initialValues={{
+              title: selectedProject.title,
+              description: selectedProject.description,
+            }}
+            validationSchema={projectValidationSchema}
+            onSubmit={handleSaveProject}
+          >
+            <Form>
+              <label htmlFor="title">Title:</label>
+              <Field name="title" type="text" />
+              <ErrorMessage name="title" component="div" className="error" />
+
+              <label htmlFor="description">Description:</label>
+              <Field name="description" as="textarea" />
+              <ErrorMessage name="description" component="div" className="error" />
+
+              <button type="submit">Save Project</button>
+            </Form>
+          </Formik>
 
           <h3>Tasks for {selectedProject.title}</h3>
           {tasks.length === 0 ? (
             <p>No tasks assigned to this project yet.</p>
           ) : (
             <ul>
-            {tasks.map((task) => (
+              {tasks.map((task) => (
                 <li key={task.id}>
-                {task.description} - Assigned to: {task.employee_name ? task.employee_name : "Unassigned"}
+                  {task.description} - Assigned to: {task.employee_name}
                 </li>
-            ))}
+              ))}
             </ul>
-
           )}
 
           <h3>Assign New Task</h3>
-          <input
-            type="text"
-            placeholder="Task Description"
-            value={newTaskDescription}
-            onChange={(e) => setNewTaskDescription(e.target.value)}
-          />
-          <select
-            value={selectedEmployeeForTask}
-            onChange={(e) => setSelectedEmployeeForTask(e.target.value)}
+          <Formik
+            initialValues={{
+              description: '',
+              employee_id: '',
+            }}
+            validationSchema={taskValidationSchema}
+            onSubmit={handleAddTask}
           >
-            <option value="">Select Employee</option>
-            {employees.map((employee) => (
-              <option key={employee.id} value={employee.id}>
-                {employee.name}
-              </option>
-            ))}
-          </select>
-          <button onClick={handleAddTask}>Add Task</button>
+            <Form>
+              <label htmlFor="description">Task Description:</label>
+              <Field name="description" type="text" />
+              <ErrorMessage name="description" component="div" className="error" />
+
+              <label htmlFor="employee_id">Assign to:</label>
+              <Field as="select" name="employee_id">
+                <option value="">Select Employee</option>
+                {employees.map((employee) => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.name}
+                  </option>
+                ))}
+              </Field>
+              <ErrorMessage name="employee_id" component="div" className="error" />
+
+              <button type="submit">Add Task</button>
+            </Form>
+          </Formik>
         </div>
       )}
     </div>
