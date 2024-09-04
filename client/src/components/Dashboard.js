@@ -20,7 +20,7 @@ const Dashboard = () => {
           projects.map((project) => (
             <li key={project.id}>
               <h2>
-                <Link to={`/edit/${project.id}`}>{project.title}</Link> {/* Link to project details */}
+                <Link to={`/projects/${project.id}`}>{project.title}</Link> {/* Link to project details */}
               </h2>
               <p>{project.description}</p>
             </li>
