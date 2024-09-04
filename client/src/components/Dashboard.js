@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom'; // Import Link for navigation
 
 const Dashboard = () => {
   const [projects, setProjects] = useState([]);
 
-  // Fetch projects on component mount
   useEffect(() => {
     fetch('http://127.0.0.1:5000/projects')
       .then((res) => res.json())
@@ -19,7 +19,9 @@ const Dashboard = () => {
         {projects.length > 0 ? (
           projects.map((project) => (
             <li key={project.id}>
-              <h2>{project.title}</h2>
+              <h2>
+                <Link to={`/edit/${project.id}`}>{project.title}</Link> {/* Link to project details */}
+              </h2>
               <p>{project.description}</p>
             </li>
           ))
@@ -27,6 +29,7 @@ const Dashboard = () => {
           <p>No projects available.</p>
         )}
       </ul>
+      <Link to="/edit">Edit Projects</Link>  {/* Added link to /edit for editing all projects */}
     </div>
   );
 };

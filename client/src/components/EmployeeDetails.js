@@ -50,9 +50,20 @@ const EmployeeDetails = () => {
 
   return (
     <div>
-      <h1>Employee Details</h1>
-
-      {/* Add New Employee Section with Formik */}
+      {/* Employee List with Delete Option */}
+      <h1>Employees</h1>
+      <ul>
+        {employees.length > 0 ? (
+          employees.map((employee) => (
+            <li key={employee.id}>
+              {employee.name} <button onClick={() => handleDeleteEmployee(employee.id)}>Remove Employee</button>
+            </li>
+          ))
+        ) : (
+          <p>No employees available</p>
+        )}
+          </ul>
+          {/* Add New Employee Section with Formik */}
       <div>
         <h2>Add New Employee</h2>
         <Formik
@@ -74,20 +85,6 @@ const EmployeeDetails = () => {
           )}
         </Formik>
       </div>
-
-      {/* Employee List with Delete Option */}
-      <h2>Employee List</h2>
-      <ul>
-        {employees.length > 0 ? (
-          employees.map((employee) => (
-            <li key={employee.id}>
-              {employee.name} <button onClick={() => handleDeleteEmployee(employee.id)}>Delete</button>
-            </li>
-          ))
-        ) : (
-          <p>No employees available</p>
-        )}
-      </ul>
     </div>
   );
 };

@@ -16,7 +16,7 @@ const NewProjectForm = ({ onSubmit }) => {
       validationSchema={validationSchema}
       onSubmit={(values, { setSubmitting, resetForm }) => {
         setServerError(null);
-        fetch('http://127.0.0.1:5000/projects', {
+        fetch('http://127.0.0.1:5000/edit', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

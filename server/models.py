@@ -7,9 +7,6 @@ class Assignment(db.Model, SerializerMixin):
     __tablename__ = 'assignments'
 
     id = db.Column(db.Integer, primary_key=True)
-    role = db.Column(db.String)
-    start_date = db.Column(db.DateTime)
-    end_date = db.Column(db.DateTime)
 
     # Foreign key to store the employee id
     employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'))
@@ -72,5 +69,15 @@ class Task(db.Model, SerializerMixin):
     # Relationship mapping the task to the project
     project = db.relationship('Project', back_populates='tasks')
 
-    # Serialization rules
+    # Serialization rules to prevent circular references
     serialize_rules = ('-project.tasks', '-assigned_employee.tasks_assigned', '-project.assignments')
+
+    # Include employee's name in the serialized task data
+    def to_dict(self):
+        task_dict = {
+            'id': self.id,
+            'description': self.description,
+            'project_id': self.project_id,
+            'employee_name': self.assigned_employee.name if self.assigned_employee else None  # Include employee name if assigned
+        }
+        return task_dict
