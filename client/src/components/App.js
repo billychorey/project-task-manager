@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Dashboard from './Dashboard';  // Assuming Dashboard.js exists
 import ProjectDetails from './ProjectDetails';  // Assuming ProjectDetails.js exists
 import TaskManagement from './TaskManagement';  // Assuming TaskManagement.js exists
-import Login from './Login';  // Assuming Login.js exists
 import EmployeeDetails from './EmployeeDetails';  // Ensure this is correctly imported
 
 function App() {
@@ -22,7 +21,6 @@ function App() {
         {/* Routes */}
         <Routes>
           <Route path="/" element={<Dashboard />} />  {/* Dashboard Route */}
-          <Route path="/login" element={<Login />} />  {/* Login Route */}
           <Route path="/projects" element={<ProjectDetails />} />  {/* Projects Route */}
           <Route path="/tasks" element={<TaskManagement />} />  {/* Task Management Route */}
           <Route path="/employees" element={<EmployeeDetails />} />  {/* Employees Route */}
