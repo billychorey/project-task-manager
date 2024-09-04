@@ -8,7 +8,6 @@ export const handleAssignTask = (projectId, taskData, setProject) => {
   })
     .then((res) => res.json())
     .then((newTask) => {
-      console.log('Assigned task:', newTask);  // Debugging: Log new task
       setProject((prevProject) => ({
         ...prevProject,
         tasks: [...prevProject.tasks, newTask],

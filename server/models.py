@@ -1,8 +1,7 @@
 from config import db
 from sqlalchemy_serializer import SerializerMixin
-from sqlalchemy.orm import relationship, backref
 
-# Association Model to store many-to-many relationship between employee and project
+# Association Model for many-to-many relationship between employee and project
 class Assignment(db.Model, SerializerMixin):
     __tablename__ = 'assignments'
 
@@ -20,6 +19,7 @@ class Assignment(db.Model, SerializerMixin):
 
     # Serialization rules
     serialize_rules = ('-employee.assignments', '-project.assignments')
+
 
 class Employee(db.Model, SerializerMixin):
     __tablename__ = 'employees'
@@ -39,6 +39,7 @@ class Employee(db.Model, SerializerMixin):
     # Serialization rules
     serialize_rules = ('-assignments.employee', '-projects.assignments', '-tasks_assigned')
 
+
 class Project(db.Model, SerializerMixin):
     __tablename__ = 'projects'
 
@@ -55,12 +56,13 @@ class Project(db.Model, SerializerMixin):
     # Serialization rules
     serialize_rules = ('-assignments.project', '-assignments.employee', '-tasks.project')
 
+
 class Task(db.Model, SerializerMixin):
     __tablename__ = 'tasks'
 
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String, nullable=False)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
     employee_id = db.Column(db.Integer, db.ForeignKey('employees.id', ondelete='CASCADE'), nullable=True)
 
     # Relationship mapping the task to the assigned employee
@@ -74,10 +76,9 @@ class Task(db.Model, SerializerMixin):
 
     # Include employee's name in the serialized task data
     def to_dict(self):
-        task_dict = {
+        return {
             'id': self.id,
             'description': self.description,
             'project_id': self.project_id,
             'employee_name': self.assigned_employee.name if self.assigned_employee else None  # Include employee name if assigned
         }
-        return task_dict

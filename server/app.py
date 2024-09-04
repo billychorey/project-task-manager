@@ -61,28 +61,30 @@ class ProjectResource(Resource):
         db.session.commit()
         return '', 204
 
-
 class TaskResource(Resource):
+    # Fetch all tasks for a specific project
+    def get(self, project_id):
+        # Query to get all tasks related to the project_id
+        tasks = Task.query.filter_by(project_id=project_id).all()
+        # Return tasks as a list of dictionaries
+        return [task.to_dict() for task in tasks], 200
+
+    # Create a new task for a specific project
     def post(self, project_id):
         data = request.get_json()
         description = data.get('description')
         employee_id = data.get('employee_id')
 
+        # Fetch the project and employee
         project = Project.query.get_or_404(project_id)
         employee = Employee.query.get_or_404(employee_id)
 
+        # Create and link the task with the project and employee
         new_task = Task(description=description, project_id=project.id, employee_id=employee.id)
         db.session.add(new_task)
-        db.session.commit()
+        db.session.commit()  # Ensure the task is saved to the DB
 
         return new_task.to_dict(), 201
-
-    def delete(self, task_id):
-        task = Task.query.get_or_404(task_id)
-        db.session.delete(task)
-        db.session.commit()
-        return '', 204
-
 
 class EmployeeResource(Resource):
     def get(self):
@@ -142,7 +144,7 @@ class EmployeeAssignmentResource(Resource):
 # Resource Mappings
 api.add_resource(ProjectListResource, '/projects')  # Fetch all projects
 api.add_resource(ProjectResource, '/projects/<int:project_id>')  # Fetch or update a single project
-api.add_resource(TaskResource, '/projects/<int:project_id>/tasks', '/tasks/<int:task_id>')  # Tasks for a project
+api.add_resource(TaskResource, '/projects/<int:project_id>/tasks', '/tasks/<int:task_id>')
 api.add_resource(EmployeeResource, '/employees', '/employees/<int:employee_id>')  # Employee management
 api.add_resource(EmployeeAssignmentResource, '/projects/<int:project_id>/assign_employee')  # Assign employee to project
 

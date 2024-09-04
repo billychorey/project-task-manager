@@ -25,19 +25,23 @@ function ProjectList() {
       .catch((error) => console.error('Error fetching employees:', error));
   }, []);
 
-  const handleProjectSelect = (project) => {
-    setSelectedProject(project);
-    setNewProjectTitle(project.title);
-    setNewProjectDescription(project.description);
+const handleProjectSelect = (project) => {
+  setSelectedProject(project);
+  setNewProjectTitle(project.title);
+  setNewProjectDescription(project.description);
 
-    fetch(`/projects/${project.id}/tasks`)
-      .then((response) => response.json())
-      .then((data) => setTasks(Array.isArray(data) ? data : []))
-      .catch((error) => {
-        console.error('Error fetching tasks:', error);
-        setTasks([]);
-      });
-  };
+  // Fetch tasks for the selected project
+  fetch(`/projects/${project.id}/tasks`)
+    .then((response) => response.json())
+    .then((data) => {
+      setTasks(Array.isArray(data) ? data : []);  // Update the task list in state
+    })
+    .catch((error) => {
+      console.error('Error fetching tasks:', error);
+      setTasks([]);  // Reset tasks in case of an error
+    });
+};
+
 
   const handleSaveProject = () => {
     fetch(`/projects/${selectedProject.id}`, {
@@ -181,12 +185,13 @@ function ProjectList() {
             <p>No tasks assigned to this project yet.</p>
           ) : (
             <ul>
-              {tasks.map((task) => (
+            {tasks.map((task) => (
                 <li key={task.id}>
-                  {task.description} - Assigned to: {task.employee_name}
+                {task.description} - Assigned to: {task.employee_name ? task.employee_name : "Unassigned"}
                 </li>
-              ))}
+            ))}
             </ul>
+
           )}
 
           <h3>Assign New Task</h3>
