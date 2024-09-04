@@ -79,6 +79,21 @@ function ProjectList() {
       .catch((error) => console.error('Error adding task:', error));
   };
 
+  const handleDeleteProject = (projectId) => {
+    fetch(`/projects/${projectId}`, {
+      method: 'DELETE',
+    })
+      .then(() => {
+        setProjects((prevProjects) =>
+          prevProjects.filter((project) => project.id !== projectId)
+        );
+        if (selectedProject && selectedProject.id === projectId) {
+          setSelectedProject(null);  // Clear the selected project if it was deleted
+        }
+      })
+      .catch((error) => console.error('Error deleting project:', error));
+  };
+
   // Project Form Validation Schema
   const projectValidationSchema = Yup.object({
     title: Yup.string()
@@ -104,13 +119,14 @@ function ProjectList() {
         {projects.map((project) => (
           <li key={project.id}>
             {project.title}{' '}
-            <button onClick={() => handleProjectSelect(project)}>Edit</button>
+            <button onClick={() => handleProjectSelect(project)}>Edit</button>{' '}
+            <button onClick={() => handleDeleteProject(project.id)}>Delete</button> {/* Delete project button */}
           </li>
         ))}
       </ul>
 
       {selectedProject && (
-        <div>
+        <div className="edit">
           <h2>Editing: {selectedProject.title}</h2>
 
           <Formik
