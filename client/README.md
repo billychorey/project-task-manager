@@ -1,51 +1,70 @@
-🏗️ Project Task Manager
-Welcome to Project Task Manager! This is your one-stop app for creating, editing, and managing projects, tasks, and employees. It's meant to make it easier to keep track of ongoing projects, manage and assign employees, and remove the project when completed!
+# Getting Started with Create React App
 
-🎯 Getting Started
-Ready to jump in?
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-Installation
-First, clone the repository and install the dependencies:
+## Available Scripts
 
-bash
-Copy code
-git clone https://github.com/your-username/project-task-manager.git
-cd project-task-manager
-npm install  # Install dependencies for the front end
-pipenv install  # Install dependencies for the back end
-Running the Project
-Backend (Flask): Start the server:
-bash
-Copy code
-pipenv shell
-flask run
-Frontend (React): Fire up the frontend:
-bash
-Copy code
-npm start
-Open your browser and navigate to http://localhost:3000.
-🛠️ Tech Stack
-This project uses a combination of Flask for the backend and React for the frontend, also using Formik to help with the forms:
+In the project directory, you can run:
 
-Flask-RESTful: For building the API.
-SQLAlchemy: Managing relationships between Employees, Projects, and Tasks.
-Formik & Yup: Handling forms and input validation with ease.
-React Router: To handle those slick route transitions.
-💻 Contributing
-Feel free to fork and give me feedback!
+### `npm start`
 
-Here’s how you can get started:
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-bash
-Copy code
-# Fork the project
-git clone https://github.com/your-username/project-task-manager.git
-cd project-task-manager
-npm install  # Install dependencies for the front end
-pipenv install  # Install dependencies for the back end
-🐞 Bugs and Issues
-Please forward all bugs and issues to Rick Astley or The Rock. I'm sure they will be addressed. 
+The page will reload if you make edits.\
+You will also see any lint errors in the console.
 
-📜 License
-This project is licensed under the MIT License - feel free to use, copy, and modify it as needed.
+### `npm test`
 
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+
+### `npm run build`
+
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
+
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
+
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+
+### `npm run eject`
+
+**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+
+If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+
+You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+
+## Learn More
+
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+
+To learn React, check out the [React documentation](https://reactjs.org/).
+
+### Code Splitting
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+
+### Analyzing the Bundle Size
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+
+### Making a Progressive Web App
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+
+### Advanced Configuration
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+
+### Deployment
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+
+### `npm run build` fails to minify
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
