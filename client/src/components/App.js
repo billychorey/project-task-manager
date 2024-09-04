@@ -1,19 +1,31 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Dashboard from './Dashboard';
-import ProjectDetails from './ProjectDetails';
-import TaskManagement from './TaskManagement';
-import Login from './Login';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import Dashboard from './Dashboard';  // Assuming Dashboard.js exists
+import ProjectDetails from './ProjectDetails';  // Assuming ProjectDetails.js exists
+import TaskManagement from './TaskManagement';  // Assuming TaskManagement.js exists
+import Login from './Login';  // Assuming Login.js exists
+import EmployeeDetails from './EmployeeDetails';  // Ensure this is correctly imported
 
 function App() {
   return (
     <Router>
       <div className="App">
+        {/* Navbar */}
+        <nav>
+          <ul>
+            <li><Link to="/">Dashboard</Link></li>  {/* Link to Dashboard */}
+            <li><Link to="/employees">Employees</Link></li>  {/* Link to Employees */}
+            <li><Link to="/projects">Projects</Link></li>  {/* Link to Projects */}
+          </ul>
+        </nav>
+
+        {/* Routes */}
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/projects/:id" element={<ProjectDetails />} />
-          <Route path="/tasks" element={<TaskManagement />} />
+          <Route path="/" element={<Dashboard />} />  {/* Dashboard Route */}
+          <Route path="/login" element={<Login />} />  {/* Login Route */}
+          <Route path="/projects" element={<ProjectDetails />} />  {/* Projects Route */}
+          <Route path="/tasks" element={<TaskManagement />} />  {/* Task Management Route */}
+          <Route path="/employees" element={<EmployeeDetails />} />  {/* Employees Route */}
         </Routes>
       </div>
     </Router>
