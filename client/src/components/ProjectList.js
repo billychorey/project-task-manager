@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';  // For validation
+import NewProjectForm from './NewProjectForm'; // Import NewProjectForm
 
 function ProjectList() {
   const [projects, setProjects] = useState([]);
@@ -8,6 +9,7 @@ function ProjectList() {
   const [tasks, setTasks] = useState([]);
   const [employees, setEmployees] = useState([]);
 
+  // Fetch projects when component mounts
   useEffect(() => {
     fetch('/projects')  
       .then((response) => response.json())
@@ -15,6 +17,7 @@ function ProjectList() {
       .catch((error) => console.error('Error fetching projects:', error));
   }, []);
 
+  // Fetch employees for task assignment
   useEffect(() => {
     fetch('/employees')  
       .then((response) => response.json())
@@ -22,6 +25,7 @@ function ProjectList() {
       .catch((error) => console.error('Error fetching employees:', error));
   }, []);
 
+  // Function to handle selecting a project to edit
   const handleProjectSelect = (project) => {
     setSelectedProject(project);
     fetch(`/projects/${project.id}/tasks`)
@@ -33,6 +37,7 @@ function ProjectList() {
       });
   };
 
+  // Function to handle saving project edits
   const handleSaveProject = (values) => {
     fetch(`/projects/${selectedProject.id}`, {
       method: 'PUT',
@@ -56,6 +61,7 @@ function ProjectList() {
       .catch((error) => console.error('Error saving project:', error));
   };
 
+  // Function to handle adding a new task to a project
   const handleAddTask = (values) => {
     if (!values.employee_id || !values.description) {
       alert('Please select an employee and provide a task description.');
@@ -79,6 +85,7 @@ function ProjectList() {
       .catch((error) => console.error('Error adding task:', error));
   };
 
+  // Function to handle deleting a project
   const handleDeleteProject = (projectId) => {
     fetch(`/projects/${projectId}`, {
       method: 'DELETE',
@@ -94,15 +101,20 @@ function ProjectList() {
       .catch((error) => console.error('Error deleting project:', error));
   };
 
-  // Project Form Validation Schema
+  // Function to handle adding a new project via NewProjectForm
+  const handleNewProjectSubmit = (newProject) => {
+    setProjects([...projects, newProject]); // Add the new project to the list
+  };
+
+  // Project Form Validation Schema for editing
   const projectValidationSchema = Yup.object({
     title: Yup.string()
         .required('Project title is required')
         .matches(/^[a-zA-Z0-9 ]*$/, 'Only letters and numbers are allowed'),
     description: Yup.string()
-        .required('Project description is required')  // Make description required
+        .required('Project description is required')  
         .max(200, 'Description can\'t be longer than 200 characters'),
-    });
+  });
 
   // Task Form Validation Schema
   const taskValidationSchema = Yup.object({
@@ -115,6 +127,11 @@ function ProjectList() {
   return (
     <div>
       <h1>Projects</h1>
+
+      {/* Add New Project Form */}
+      <h2>Add New Project</h2>
+      <NewProjectForm onSubmit={handleNewProjectSubmit} />  {/* Use NewProjectForm */}
+
       <ul>
         {projects.map((project) => (
           <li key={project.id}>

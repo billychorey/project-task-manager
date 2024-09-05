@@ -64,9 +64,7 @@ class ProjectResource(Resource):
 class TaskResource(Resource):
     # Fetch all tasks for a specific project
     def get(self, project_id):
-        # Query to get all tasks related to the project_id
         tasks = Task.query.filter_by(project_id=project_id).all()
-        # Return tasks as a list of dictionaries
         return [task.to_dict() for task in tasks], 200
 
     # Create a new task for a specific project
@@ -75,14 +73,12 @@ class TaskResource(Resource):
         description = data.get('description')
         employee_id = data.get('employee_id')
 
-        # Fetch the project and employee
         project = Project.query.get_or_404(project_id)
         employee = Employee.query.get_or_404(employee_id)
 
-        # Create and link the task with the project and employee
         new_task = Task(description=description, project_id=project.id, employee_id=employee.id)
         db.session.add(new_task)
-        db.session.commit()  # Ensure the task is saved to the DB
+        db.session.commit()
 
         return new_task.to_dict(), 201
 
@@ -103,10 +99,8 @@ class EmployeeResource(Resource):
     def delete(self, employee_id):
         employee = Employee.query.get_or_404(employee_id)
 
-        # Manually delete associated tasks
         Task.query.filter_by(employee_id=employee_id).delete()
 
-        # Delete the employee
         db.session.delete(employee)
         db.session.commit()
         return '', 204
@@ -121,7 +115,6 @@ class EmployeeAssignmentResource(Resource):
         if not employee_id or not description:
             return {"message": "Missing required data"}, 400
 
-        # Fetch the project and employee
         project = Project.query.get(project_id)
         employee = Employee.query.get(employee_id)
 
@@ -131,7 +124,6 @@ class EmployeeAssignmentResource(Resource):
             return {"message": "Employee not found"}, 404
 
         try:
-            # Create new task and assign it to the employee
             new_task = Task(description=description, project_id=project.id, employee_id=employee.id)
             db.session.add(new_task)
             db.session.commit()
@@ -142,8 +134,8 @@ class EmployeeAssignmentResource(Resource):
 
 
 # Resource Mappings
-api.add_resource(ProjectListResource, '/projects')  # Fetch all projects
-api.add_resource(ProjectResource, '/projects/<int:project_id>')  # Fetch or update a single project
+api.add_resource(ProjectListResource, '/projects')  # Fetch all projects and create a new project
+api.add_resource(ProjectResource, '/projects/<int:project_id>')  # Fetch, update, or delete a single project
 api.add_resource(TaskResource, '/projects/<int:project_id>/tasks', '/tasks/<int:task_id>')
 api.add_resource(EmployeeResource, '/employees', '/employees/<int:employee_id>')  # Employee management
 api.add_resource(EmployeeAssignmentResource, '/projects/<int:project_id>/assign_employee')  # Assign employee to project

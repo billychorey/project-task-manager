@@ -10,7 +10,6 @@ function App() {
   return (
     <Router>
       <div className="App">
-        {/* Navbar */}
         <nav>
           <ul>
             <li><Link to="/">Dashboard</Link></li>
